@@ -195,8 +195,10 @@ def min_threshold_filter(threshold):
 def silo_climate_source(variable,silo_path):
     return lambda time_period,lat,lng: extract_silo(variable,time_period,lat,lng,silo_path)
 
-def grid_parameters(grid,precision=3):
-    return lambda lat,lng: ('%.'+str(precision)+'f')%grid.sel(y=lat,x=lng,method='nearest',tolerance=1e-4)
+def grid_parameters(grid,precision=3,format_str=None):
+    if format_str is None:
+        format_str = '%.'+str(precision)+'f'
+    return lambda lat,lng: format_str%grid.sel(y=lat,x=lng,method='nearest',tolerance=1e-4)
 
 class SpatialHPxRun(object):
     def __init__(self,
