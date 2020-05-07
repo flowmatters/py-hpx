@@ -133,7 +133,7 @@ def run_hydrus(sim):
         f = open('path.dat','w')
         f.write(sim_abs)
         f.close()
-        cmd_line = f'{HP1_EXE} {os.getcwd()}'
+        cmd_line = f'{HP1_EXE} .'
         print(f'Running with command: {cmd_line}')
         res = os.system(cmd_line)
         assert res==0
@@ -230,7 +230,7 @@ class SpatialHPxRun(object):
         return df.reset_index()
 
     def _make_temp_model(self):
-        res = tempfile.mktemp(prefix='hpx_')
+        res = tempfile.mktemp(prefix='hpx_',dir='.')
         shutil.copytree(self.model,res)
         return res
 
