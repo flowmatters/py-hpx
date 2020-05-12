@@ -173,7 +173,7 @@ def read_outputs(model):
 def extract_silo(var,time_period,lat,lon,silo_path):
     ds = xr.open_mfdataset(glob(os.path.join(silo_path,'*.%s.nc'%var)))
     res = ds[var].loc[time_period,(lat-1e-6):(lat+1e-6),(lon-1e-6):(lon+1e-6)][:,0,0].to_series().dropna()
-    res * M_TO_MM
+    # res * M_TO_MM
     return res
 
 def extract_climate(lat,lon,start,end,silo_path):
@@ -192,8 +192,8 @@ def ping(s):
 def min_threshold_filter(threshold):
     return lambda v,lat,lng: v>=threshold
 
-def silo_climate_source(variable,silo_path):
-    return lambda time_period,lat,lng: extract_silo(variable,time_period,lat,lng,silo_path)
+def silo_climate_source(variable,silo_path,scale=1):
+    return lambda time_period,lat,lng: extract_silo(variable,time_period,lat,lng,silo_path) * scale
 
 def grid_parameters(grid,precision=3,format_str=None):
     if format_str is None:
