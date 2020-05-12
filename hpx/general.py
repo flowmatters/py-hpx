@@ -265,8 +265,7 @@ class SpatialHPxRun(object):
             outputs = run_hydrus(tmp_model)
             return outputs
         finally:
-            pass
-        self._remove_temp_model(tmp_model)
+            self._remove_temp_model(tmp_model)
         return None
 
     def run(self,sim_start=DEFAULT_SIM_START,sim_end=DEFAULT_SIM_END):
