@@ -77,6 +77,12 @@ CSV_OPTIONS={
     }
 }
 
+def hpx_exe(fn=None):
+    global HP1_EXE
+    if fn is not None:
+        HP1_EXE=fn
+    return HP1_EXE
+
 def write_atmosph_in(df,fn=None):
     WIDTH=12
     HEADER=('' +''.join([col.rjust(WIDTH) for col in df.columns]) + '\n')[1:]
