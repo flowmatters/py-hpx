@@ -250,7 +250,8 @@ class SpatialHPxRun(object):
             atmosph[k] = np.array(v)
 
         parameters = {k:getter(lat,lng) for k,getter in self.parameters.items()}
-        parameters['HPXDIR'] = os.path.abspath(os.path.join(HP1_DIR,'..'))
+        if not 'ROOTDIR' in parameters:
+            parameters['ROOTDIR'] = os.path.abspath(os.path.join(HP1_DIR,'..'))
         tmp_model = self._make_temp_model()
         try:
             write_atmosph_in(atmosph,tmp_model)
