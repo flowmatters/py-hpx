@@ -64,7 +64,7 @@ CSV_OPTIONS={
         'skipfooter':1
     },
     'T_LEVEL':{
-        'skiprows':[0,1,2,3,4,5,7,8],
+        'skiprows':[0,1,2,3,4,6,7,8],
         'skipfooter':1
     },
     'RUN_INF':{
@@ -163,7 +163,7 @@ def read_output_file(fn):
     
 def read_outputs(model):
     model = os.path.abspath(model)
-    output_filenames = list(glob(os.path.join(model,'*.out')))
+    output_filenames = list(set(glob(os.path.join(model,'*.out'))).union(set(glob(os.path.join(model,'*.OUT')))))
     result = {}
     for fn in output_filenames:
         base = os.path.basename(fn)
