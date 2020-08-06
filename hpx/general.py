@@ -236,7 +236,7 @@ class SpatialHPxRun(object):
         assert tmp_model != self.model
         shutil.rmtree(tmp_model)
 
-    def _run_for_location(self,time_period,lat,lng):
+    def _run_for_location(self,time_period,lat,lng,dry_run=False):
         climate_inputs = {k:getter(time_period,lat,lng) for k,getter in self.climate_sources.items()}
         empty_climate=False
         for k,vals in climate_inputs.items():
@@ -273,7 +273,7 @@ class SpatialHPxRun(object):
             self._remove_temp_model(tmp_model)
         return None
 
-    def run(self,sim_start=DEFAULT_SIM_START,sim_end=DEFAULT_SIM_END):
+    def run(self,sim_start=DEFAULT_SIM_START,sim_end=DEFAULT_SIM_END,dry_run=False):
         # mask = xr.open_rasterio(path)[0,:,:]
         coords_to_run = self._find_run_coords()
         dims = self.domain.dims
@@ -295,7 +295,11 @@ class SpatialHPxRun(object):
             else:
                 ping('.')
     #        print(i,row.y,row.x,row.lat,row.lng)
-            res = self._run_for_location(date_range,row.lat,row.lng)
+            res = self._run_for_location(date_range,row.lat,row.lng,dry_run)
+
+            if dry_run:
+                continue
+
             if res is None: continue
             for o,spec in self.outputs.items():
                 if spec.get('time',False):
