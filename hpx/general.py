@@ -140,7 +140,7 @@ def run_hydrus(sim):
         f.write(sim_abs)
         f.close()
         cmd_line = f'{HP1_EXE} .'
-        print(f'Running with command: {cmd_line}')
+
         res = os.system(cmd_line)
         assert res==0
     finally:
