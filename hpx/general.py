@@ -186,13 +186,59 @@ def ping(s):
     print(s,end='')
     sys.stdout.flush()
 
-def min_threshold_filter(threshold):
-    return lambda v,lat,lng: v>=threshold
+def min_threshold_filter(threshold,source):
+    return lambda lat,lng: source(lat,lng)>=threshold
 
-def grid_parameters(grid,precision=3,format_str=None):
+def max_threshold_filter(threshold,source):
+    return lambda lat,lng: source(lat,lng)<=threshold
+
+def and_filter(*filters):
+    return lambda lat,lng: np.all([f(lat,lng) for f in filters])
+
+def grid_parameters(grid,precision=3,format_str=None,numeric=False):
+    lat_ys={}
+
+    y_step = float(grid.y[5]-grid.y[0])/5
+    y0 = grid.y[0]
+    def y_i(lat):
+        y = lat_ys.get(lat,None)
+        if y is None:
+            y = lat_ys[lat] = int((lat-y0)/y_step)
+        return y
+
+    lng_xs={}
+    x_step = float(grid.x[5]-grid.x[0])/5
+    x0 = grid.x[0]
+    def x_i(lng):
+        x = lng_xs.get(lng,None)
+        if x is None:
+            x = lng_xs[lng] = int((lng-x0)/x_step)
+
+        return x
+
+    if numeric:
+        return lambda lat,lng:float(grid[y_i(lat),x_i(lng)])
+#        return lambda lat,lng:float(grid.sel(y=lat,x=lng,method='nearest',tolerance=1e-4))
+
     if format_str is None:
         format_str = '%.'+str(precision)+'f'
-    return lambda lat,lng: format_str%grid.sel(y=lat,x=lng,method='nearest',tolerance=1e-4)
+#     return lambda lat,lng: format_str%grid.sel(y=lat,x=lng,method='nearest',tolerance=1e-4)
+    return lambda lat,lng: format_str%grid[y_i(lat),x_i(lng)]
+
+# def grid_parameters(grid,precision=3,format_str=None,numeric=False):
+#     y_step = float(grid.y[5]-grid.y[0])/5
+#     x_step = float(grid.x[5]-grid.x[0])/5
+#     y0 = grid.y[0]
+#     x0 = grid.x[0]
+#     y_i = lambda lat: int(y0 + lat*y_step)
+#     x_i = lambda lng: int(x0 + lng*x_step)
+
+#     if numeric:
+#         return lambda lat,lng:float(grid.sel(y=lat,x=lng,method='nearest',tolerance=1e-4))
+
+#     if format_str is None:
+#         format_str = '%.'+str(precision)+'f'
+#     return lambda lat,lng: format_str%grid.sel(y=lat,x=lng,method='nearest',tolerance=1e-4)
 
 class SpatialHPxRun(object):
     def __init__(self,
@@ -224,7 +270,9 @@ class SpatialHPxRun(object):
         for d in dims:
             coord = dim_translate.get(d,d)
             df[coord] = self.domain.coords[d][np.array(df[d])]
-        df = df[df.apply(lambda row: self.cell_filter(row['v'],row['lat'],row['lng']),axis=1)]
+        rows_to_keep = [self.cell_filter(lat,lng) for lat,lng in zip(df['lat'],df['lng'])]
+        df = df[rows_to_keep]
+#00        df = df[df.apply(lambda row: self.cell_filter(row['lat'],row['lng']),axis=1)]
         return df.reset_index()
 
     def _make_temp_model(self):
