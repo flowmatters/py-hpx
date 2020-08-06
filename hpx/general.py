@@ -8,6 +8,7 @@ import re
 from datetime import datetime
 import tempfile
 import shutil
+from .gw import set_gw_depth
 
 HP1_DIR=os.path.join(os.getcwd(),'HP1')
 HP1_EXE=os.path.join(HP1_DIR,'hp1.exe')
@@ -200,12 +201,14 @@ class SpatialHPxRun(object):
                  cell_filter=lambda v,lat,lng: True,
                  climate_sources={},
                  parameters={},
+                 gw_depth=lambda lat,lng: None,
                  outputs=DEFAULT_OUTPUTS):
         self.model = model
         self.domain = domain
         self.cell_filter = cell_filter
         self.climate_sources = climate_sources
         self.parameters = parameters
+        self.gw_depth = gw_depth
         self.outputs=outputs
 
     def _find_run_coords(self):
@@ -256,6 +259,14 @@ class SpatialHPxRun(object):
         try:
             write_atmosph_in(atmosph,tmp_model)
             substitute_templates(tmp_model,parameters)
+
+            gw_depth = self.gw_depth(lat,lng)
+            if gw_depth is not None:
+                set_gw_depth(gw_depth,os.path.join(tmp_model,'Profile.dat'))
+
+            if dry_run:
+                return None
+
             outputs = run_hydrus(tmp_model)
             return outputs
         finally:
