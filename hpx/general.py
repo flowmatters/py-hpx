@@ -321,12 +321,34 @@ class SpatialHPxRun(object):
             self._remove_temp_model(tmp_model)
         return None
 
+    def run_single(self,sim_start=DEFAULT_SIM_START,sim_end=DEFAULT_SIM_END,cell_number=0,dry_run=False):
+        coords_to_run = self._find_run_coords()
+        date_range = pd.date_range(sim_start,sim_end)
+
+        row = coords_to_run.iloc[cell_number]
+        res = self._run_for_location(date_range,row.lat,row.lng,dry_run)
+        return res
+
+    def extract_results(self,res):
+        if res is None: return None
+        processed = {}
+        for o,spec in self.outputs.items():
+            if spec.get('time',False):
+                try:
+                    processed[o] = np.array(res[spec['file']][spec['column']])
+                except:
+                    print(res[spec['file']].columns)
+                    raise
+            else:
+                raise Exception('Not supported')
+
+        return processed
+
     def run(self,sim_start=DEFAULT_SIM_START,sim_end=DEFAULT_SIM_END,dry_run=False):
         # mask = xr.open_rasterio(path)[0,:,:]
         coords_to_run = self._find_run_coords()
-        dims = self.domain.dims
+        # dims = self.domain.dims
         date_range = pd.date_range(sim_start,sim_end)
-
         ping(f'Running {len(coords_to_run)} cells\n')
 
         def make_array(spec):
@@ -348,11 +370,16 @@ class SpatialHPxRun(object):
             if dry_run:
                 continue
 
-            if res is None: continue
+            processed = self.extract_results(res)
+            if processed is None: continue
             for o,spec in self.outputs.items():
                 if spec.get('time',False):
                     results[o][:,int(row.y),int(row.x)] = np.nan
-                    values = np.array(res[spec['file']][spec['column']])
+                    try:
+                        values = processed[o]
+                    except:
+                        print(res[spec['file']].columns)
+                        raise
                     results[o][:len(values),int(row.y),int(row.x)] = values
                 else:
                     raise Exception('Not supported')
