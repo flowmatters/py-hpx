@@ -19,8 +19,42 @@ DEFAULT_OUTPUTS={
         'file':'T_LEVEL',
         'column':'Volume'
         
+    },
+    'pH':{
+        'dims':[
+            'time',
+            'dist_x'
+        ],
+        'file':'nod_inf_chem',
+        'column':'pH'
+    },
+    'pe':{
+        'dims':[
+            'time',
+            'dist_x'
+        ],
+        'file':'nod_inf_chem',
+        'column':'pe'
+    },
+    'k_pyrite':{
+        'dims':[
+            'time',
+            'dist_x'
+        ],
+        'file':'nod_inf_chem',
+        'column':'k_pyrite'
+    },
+    'dk_pyrite':{
+        'dims':[
+            'time',
+            'dist_x'
+        ],
+        'file':'nod_inf_chem',
+        'column':'dk_pyrite'
     }
+    	          	    # mass_H2O	       Fe(2)	       Fe(3)	       S(-2)	        S(6)	          Na	           K	          Mg	          Ca	        C(4)	          Cl	          Al	        m_O2	    si_O2(g)	   si_CO2(g)	si_Ferrihydrite	  si_Fe(OH)2	si_H-Jarosite	si_Na-Jarosite	si_K-Jarosite	  si_calcite	 si_gibbsite	   si_gypsum	   si_pyrite	    pressure	   total_mol	      volume	     g_O2(g)	    g_CO2(g)	    k_pyrite	   	PressureHead	     siFerri	         gCl	          gK	         gCa	         gMg	         gNa	        gSO4	         gAl	         gS2	        gFe2	        gFe3	'
 }
+
 DEFAULT_SIM_START=datetime(2000,1,1)
 DEFAULT_SIM_END=datetime(2000,1,10)
 
@@ -336,6 +370,16 @@ class SpatialHPxRun(object):
             if spec.get('time',False):
                 try:
                     processed[o] = np.array(res[spec['file']][spec['column']])
+                except:
+                    print(res[spec['file']].columns)
+                    raise
+            elif 'dims' in spec:
+                try:
+                    data = res[spec['file']]
+                    processed[o] = {
+                        'dims':{d:np.array(data[d]) for d in spec['dims']},
+                        'values':np.array(data[spec['column']])
+                    }
                 except:
                     print(res[spec['file']].columns)
                     raise
