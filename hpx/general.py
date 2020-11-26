@@ -335,6 +335,17 @@ class SpatialHPxRun(object):
             atmosph[k] = np.array(v)
 
         parameters = {k:getter(lat,lng) for k,getter in self.parameters.items()}
+        nan_param = False
+        for k,v in parameters.items():
+            if isinstance(v,str):
+                continue
+
+            if np.isnan(v):
+                nan_param = True
+                print(f'{k} is nan at {lat},{lng}. Skipping cell')
+        if nan_param:
+            return None
+
         if not 'ROOTDIR' in parameters:
             parameters['ROOTDIR'] = os.path.abspath(os.path.join(HP1_DIR,'..'))
         tmp_model = self._make_temp_model()
