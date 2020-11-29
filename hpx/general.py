@@ -372,12 +372,13 @@ class SpatialHPxRun(object):
 
         row = coords_to_run.iloc[cell_number]
         res = self._run_for_location(date_range,row.lat,row.lng,dry_run)
-        return res
+        return res, {'lat':row.lat,'lng':row.lng}
 
     def extract_results(self,res):
         if res is None: return None
         processed = {}
         for o,spec in self.outputs.items():
+            print(f'Processing output: {o}')
             if spec.get('time',False):
                 try:
                     processed[o] = np.array(res[spec['file']][spec['column']])
