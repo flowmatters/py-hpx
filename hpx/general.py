@@ -400,6 +400,49 @@ class SpatialHPxRun(object):
 
         return processed
 
+    def init_results(self,example,date_range):
+        # What about other dimensions?
+        all_dims = {
+            'time':date_range,
+            'lat':self.domain.indexes['y'],
+            'lng':self.domain.indexes['x']
+        }
+
+        def make_array(lbl,spec):
+            if spec.get('time',False):
+                shp = (len(date_range),self.domain.shape[0],self.domain.shape[1])
+                return xr.DataArray(np.nan*np.ones(shp,dtype='f'),(date_range,self.domain.indexes['y'],self.domain.indexes['x']),('time','lat','lng'))
+            dims = spec.get('dims',[])
+            if len(dims):
+                dim_vals = [list(sorted(set(example[spec['column']]['dims'][d]))) for d in dims]
+                stored_dims = []
+                for i,d in enumerate(dims):
+                    if d in all_dims:
+                        if len(dim_vals[i]) == len(all_dims[d]):
+                            stored = d
+                        else:
+                            stored = f'{d}_{spec["column"]}'
+                    else:
+                        stored = d
+
+                    if not stored in all_dims:
+                        all_dims[stored] = dim_vals[i]
+                    stored_dims.append(stored)
+                dims = stored_dims
+                dims += ['lat','lng']
+                dim_vals += [
+                    self.domain.indexes['y'],
+                    self.domain.indexes['x']                   
+                ]
+                shp = [len(dv) for dv in dim_vals]
+                return xr.DataArray(np.zeros(tuple(shp),dtype='f'),tuple(dim_vals),tuple(dims))
+
+            return xr.DataArray(np.zeros(self.domain.shape,dtype='f'),(self.domain.indexes['y'],self.domain.indexes['x']),('lat','lng'))
+
+        result_arrays = {o:make_array(o,spec) for o,spec in self.outputs.items()}
+        results = xr.Dataset(result_arrays,all_dims)
+        return results
+
     def run(self,sim_start=DEFAULT_SIM_START,sim_end=DEFAULT_SIM_END,dry_run=False):
         # mask = xr.open_rasterio(path)[0,:,:]
         coords_to_run = self._find_run_coords()
@@ -407,14 +450,8 @@ class SpatialHPxRun(object):
         date_range = pd.date_range(sim_start,sim_end)
         ping(f'Running {len(coords_to_run)} cells\n')
 
-        def make_array(spec):
-            if spec.get('time',False):
-                shp = (len(date_range),self.domain.shape[0],self.domain.shape[1])
-                return xr.DataArray(np.nan*np.ones(shp,dtype='f'),(date_range,self.domain.indexes['y'],self.domain.indexes['x']),('time','lat','lng'))
-            return xr.DataArray(np.zeros(self.domain.shape,dtype='f'),(self.domain.indexes['y'],self.domain.indexes['x']),('lat','lng'))
+        results = None
 
-        result_arrays = {o:make_array(spec) for o,spec in self.outputs.items()}
-        results = xr.Dataset(result_arrays,{'time':date_range,'lat':self.domain.indexes['y'],'lng':self.domain.indexes['x']})
         for i,row in coords_to_run.iterrows():
             if (i % 100)==0: 
                 ping('\n*, %d %s'%(i,str(datetime.now())))
@@ -426,8 +463,12 @@ class SpatialHPxRun(object):
             if dry_run:
                 continue
 
+            if results is None:
+                results = self.init_results(res,date_range)
+
             processed = self.extract_results(res)
             if processed is None: continue
+
             for o,spec in self.outputs.items():
                 if spec.get('time',False):
                     results[o][:,int(row.y),int(row.x)] = np.nan
