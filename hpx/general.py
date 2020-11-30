@@ -435,9 +435,9 @@ class SpatialHPxRun(object):
                     self.domain.indexes['x']                   
                 ]
                 shp = [len(dv) for dv in dim_vals]
-                return xr.DataArray(np.zeros(tuple(shp),dtype='f'),tuple(dim_vals),tuple(dims))
+                return xr.DataArray(np.nan*np.ones(tuple(shp),dtype='f'),tuple(dim_vals),tuple(dims))
 
-            return xr.DataArray(np.zeros(self.domain.shape,dtype='f'),(self.domain.indexes['y'],self.domain.indexes['x']),('lat','lng'))
+            return xr.DataArray(np.nan*np.ones(self.domain.shape,dtype='f'),(self.domain.indexes['y'],self.domain.indexes['x']),('lat','lng'))
 
         result_arrays = {o:make_array(o,spec) for o,spec in self.outputs.items()}
         results = xr.Dataset(result_arrays,all_dims)
