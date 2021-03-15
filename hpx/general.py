@@ -179,6 +179,17 @@ def read_atmosph_in(fn):
         fn = os.path.join(fn,'ATMOSPH.IN')
     return pd.read_table(fn,skiprows=8,delimiter=r'\s+',skipfooter=1,engine='python')
 
+def resize_atmosph(df,length):
+    timesteps = list(df['tAtm'])
+    delta_t = (timesteps[-1]-timesteps[0])/(len(df)-1)
+    t_atm = np.arange(timesteps[0],timesteps[0]+delta_t*length,delta_t)
+    result = pd.DataFrame()
+    result['tAtm'] = t_atm
+    for c in df.columns[1:]:
+        result[c] = df[c]
+    result = result.fillna(0.0)
+    return result
+
 def run_hydrus(sim):
     cwd = os.getcwd()
     try:
@@ -347,6 +358,9 @@ class SpatialHPxRun(object):
         
         atmosph = read_atmosph_in(self.model)
         atmosph = atmosph[:len(time_period)]
+        if len(time_period) > len(atmosph):
+            atmosph = resize_atmosph(atmosph,len(time_period))
+            
         for k,v in climate_inputs.items():
             atmosph[k] = np.array(v)
 
