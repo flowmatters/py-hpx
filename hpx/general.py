@@ -339,6 +339,7 @@ class SpatialHPxRun(object):
     def _make_temp_model(self):
         res = tempfile.mktemp(prefix='hpx_',dir='.')
         shutil.copytree(self.model,res)
+        os.remove(os.path.join(res,'ATMOSPH.IN'))
         return res
 
     def _remove_temp_model(self,tmp_model):
@@ -359,6 +360,7 @@ class SpatialHPxRun(object):
         atmosph = read_atmosph_in(self.model)
         atmosph = atmosph[:len(time_period)]
         if len(time_period) > len(atmosph):
+            print('Resizing ATMOSPH.IN from %d to %d rows'%(len(atmosph),len(time_period)))
             atmosph = resize_atmosph(atmosph,len(time_period))
             
         for k,v in climate_inputs.items():
@@ -379,6 +381,7 @@ class SpatialHPxRun(object):
         if not 'ROOTDIR' in parameters:
             parameters['ROOTDIR'] = os.path.abspath(os.path.join(HP1_DIR,'..'))
         tmp_model = self._make_temp_model()
+        print('Running in %s'%tmp_model)
         try:
             write_atmosph_in(atmosph,tmp_model)
             substitute_templates(tmp_model,parameters)
