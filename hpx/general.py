@@ -187,7 +187,7 @@ def resize_atmosph(df,length):
     result['tAtm'] = t_atm
     for c in df.columns[1:]:
         result[c] = df[c]
-    result = result.fillna(0.0)
+    result = result.ffill()
     return result
 
 def run_hydrus(sim):
