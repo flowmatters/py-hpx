@@ -10,6 +10,8 @@ import tempfile
 import shutil
 from .gw import set_gw_depth
 
+HPX_DEBUG_WRITE_MODEL_INPUTS=os.environ.get('HPX_DEBUG_WRITE_MODEL_INPUTS',None)
+
 HP1_DIR=os.path.join(os.getcwd(),'HP1')
 HP1_EXE=os.path.join(HP1_DIR,'hp1.exe')
 
@@ -384,6 +386,11 @@ class SpatialHPxRun(object):
         print('Running in %s'%tmp_model)
         try:
             write_atmosph_in(atmosph,tmp_model)
+            if HPX_DEBUG_WRITE_MODEL_INPUTS is not None:
+                debug_atm_fn = 'atmosph_%f_%f'%(lat,lng).replace('.','_')
+                debug_atm_fn += '.in'
+                debug_atm_fn = os.path.join(HPX_DEBUG_WRITE_MODEL_INPUTS,debug_atm_fn)
+                write_atmosph_in(atmosph,debug_atm_fn)
             substitute_templates(tmp_model,parameters)
 
             gw_depth = self.gw_depth(lat,lng)
