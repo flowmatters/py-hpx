@@ -387,7 +387,8 @@ class SpatialHPxRun(object):
         try:
             write_atmosph_in(atmosph,tmp_model)
             if HPX_DEBUG_WRITE_MODEL_INPUTS is not None:
-                debug_atm_fn = 'atmosph_%f_%f'%(lat,lng).replace('.','_')
+                debug_atm_fn = 'atmosph_%f_%f'%(lat,lng)
+                debug_atm_fn = debug_atm_fn.replace('.','_')
                 debug_atm_fn += '.in'
                 debug_atm_fn = os.path.join(HPX_DEBUG_WRITE_MODEL_INPUTS,debug_atm_fn)
                 write_atmosph_in(atmosph,debug_atm_fn)
